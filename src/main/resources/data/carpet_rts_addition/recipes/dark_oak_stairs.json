@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#  ",
+    "## ",
+    "###"
+  ],
+  "key": {
+    "#": "minecraft:dark_oak_log"
+  },
+  "result": {
+    "id": "minecraft:dark_oak_stairs",
+    "count": 16
+  }
+}

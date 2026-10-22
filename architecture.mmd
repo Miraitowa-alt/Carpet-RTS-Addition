@@ -1,0 +1,54 @@
+flowchart TB
+
+    PLAYER["👤 玩家 / 服务器管理员"]
+
+    subgraph PLATFORM["① 游戏平台（外部依赖）"]
+        FABRIC["🧩 Fabric Loader<br/>启动游戏、装载模组"]
+        MC["🎮 Minecraft 26.3<br/>游戏本体"]
+        CARPET["🟨 Carpet 模组<br/>规则管家（必须先装）"]
+    end
+
+    subgraph MOD["② 本仓库：Carpet-RTS-Addition 扩展模组"]
+        CORE["🧠 总接线员<br/>CarpetRtsAddition"]
+        RULES["⚙️ 公共规则<br/>CarpetRules"]
+        PRIVATE["🔒 私有设置<br/>RtsSettings"]
+        CMD["⌨️ 测试命令<br/>RtsCommand"]
+        DANCE["💃 跳舞钩子<br/>MobMakarenaMixin"]
+    end
+
+    subgraph RESULT["③ 玩家在游戏里看到的结果"]
+        O1["/carpet 多出<br/>makarena 等规则"]
+        O2["独立保存<br/>私有设置"]
+        O3["聊天栏输出<br/>当前设置清单"]
+        O4["附近生物<br/>跳起玛卡瑞纳"]
+    end
+
+    PLAYER -->|"安装并启动"| FABRIC
+    FABRIC -->|"启动"| MC
+    FABRIC -->|"装载前置模组"| CARPET
+    FABRIC -->|"装载本模组，调用 onInitialize()"| CORE
+    CARPET -->|"提供 API / 生命周期回调"| CORE
+    CORE -->|"交给 Carpet 解析"| RULES
+    CORE -->|"交给私有管理器"| PRIVATE
+    CORE -->|"注册命令"| CMD
+    RULES -->|"makarena 开关"| DANCE
+    RULES --> O1
+    PRIVATE --> O2
+    CMD --> O3
+    DANCE --> O4
+
+    classDef platform fill:#EAF2FB,stroke:#3B6EA5,stroke-width:1.5px,color:#102A43
+    classDef mod fill:#E9F7EF,stroke:#2F7D4F,stroke-width:1.5px,color:#0B3D2E
+    classDef feature fill:#FFF4E5,stroke:#C05621,stroke-width:1.5px,color:#5A2A00
+    classDef result fill:#FDECEF,stroke:#B8325A,stroke-width:1.5px,color:#4A0D1F
+    classDef player fill:#F1EAFE,stroke:#6B46C1,stroke-width:1.5px,color:#2D1B69
+
+    class FABRIC,MC,CARPET platform
+    class CORE mod
+    class RULES,PRIVATE,CMD,DANCE feature
+    class O1,O2,O3,O4 result
+    class PLAYER player
+
+    style PLATFORM fill:#F8FAFD,stroke:#C9D6E8,stroke-width:1px,color:#102A43
+    style MOD fill:#F7FCF9,stroke:#C8E6D4,stroke-width:1px,color:#0B3D2E
+    style RESULT fill:#FFF9FA,stroke:#F3C6D3,stroke-width:1px,color:#4A0D1F

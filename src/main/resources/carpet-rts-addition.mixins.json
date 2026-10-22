@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "carpet_rts_addition.mixins",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "MobMakarenaMixin"
+  ],
+  "client": [
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
+}
