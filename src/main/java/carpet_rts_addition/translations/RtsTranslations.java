@@ -18,12 +18,24 @@ import java.util.Map;
 public final class RtsTranslations
 {
     private static final String LANG_PATH = "assets/carpet_rts_addition/lang/%s.json";
+    private static final String FALLBACK_LANGUAGE = "en_us";
 
     private RtsTranslations()
     {
     }
 
     public static Map<String, String> getTranslations(String lang)
+    {
+        Map<String, String> translations = load(lang);
+        if (translations.isEmpty() && !FALLBACK_LANGUAGE.equals(lang))
+        {
+            // Carpet shows the raw translation key when a language is missing, so fall back to English
+            translations = load(FALLBACK_LANGUAGE);
+        }
+        return translations;
+    }
+
+    private static Map<String, String> load(String lang)
     {
         return Translations.getTranslationFromResourcePath(String.format(LANG_PATH, lang));
     }

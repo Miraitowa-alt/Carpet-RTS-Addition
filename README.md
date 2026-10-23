@@ -75,6 +75,10 @@ Rule descriptions and translation keys are documented with verified bytecode evi
   errors`, i.e. the world will not load at all.
 - **Access widener**: first line must be `classTweaker v1 official`, and the file must be
   saved **without a BOM** — Loom rejects both a BOM and the `named` namespace.
+- **Rule descriptions are translated server-side** from Carpet's `language` rule
+  (`/carpet language <lang>`). A missing `assets/carpet_rts_addition/lang/<lang>.json`
+  makes Carpet print the raw key (`carpet.rule.<name>.desc`), which is what the client sees.
+  This mod ships `en_us` + `zh_cn` and falls back to `en_us` for other languages.
 
 ## Build
 
