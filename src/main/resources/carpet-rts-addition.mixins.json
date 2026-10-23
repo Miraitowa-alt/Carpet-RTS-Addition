@@ -4,6 +4,8 @@
   "package": "carpet_rts_addition.mixins",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "BucketItemMixin",
+    "EnchantmentMixin",
     "RecipeMapMixin"
   ],
   "client": [],

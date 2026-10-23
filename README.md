@@ -40,16 +40,15 @@ Yarn mappings dependency.
 | `carpet-rts-addition.accesswidener` | Access widener, header only |
 | `data/carpet_rts_addition/recipe/*.json` | 39 crafting recipes (registry path, singular `recipe`) |
 
-## Rule: `rtsRecipes`
+## Rules
 
-| | |
-|---|---|
-| Default | `false` |
-| Command | `/carpet rtsRecipes true` / `false` |
-| Effect | While off, the mod's recipes are filtered out of recipe matching (`RecipeMap.getRecipesFor`) and id lookup (`RecipeMap.byKey`), so they cannot be crafted or unlocked. Toggling takes effect immediately, no reload needed. |
+| Rule | Default | Effect |
+|---|---|---|
+| `rtsRecipes` | `false` | While off, the mod's recipes are filtered out of recipe matching (`RecipeMap.getRecipesFor`) and id lookup (`RecipeMap.byKey`), so they cannot be crafted or unlocked. Toggling takes effect immediately, no reload needed. |
+| `infiniteBuckets` | `false` | While on, water and lava buckets accept the Infinity enchantment, and an enchanted bucket is not consumed when used. Applies to the anvil and `/enchant` (both check `Enchantment#canEnchant`); it cannot be obtained from an enchanting table because buckets have no `enchantable` component. Dispenser use is not covered. |
 
 Recipes are data pack registry entries in 26.x and cannot be added or removed at runtime,
-which is why the rule filters lookups instead of the registry. The recipe-book *display*
+which is why `rtsRecipes` filters lookups instead of the registry. The recipe-book *display*
 built at world load may still list them while off; using them fails.
 
 ## Adding another rule

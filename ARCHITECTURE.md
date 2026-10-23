@@ -15,9 +15,9 @@
 |---|---|
 | Fabric 入口 | `CarpetRtsAdditionMod implements ModInitializer`，读版本号后调用 `CarpetRtsAdditionServer.init()` |
 | Carpet 扩展 | `CarpetRtsAdditionServer implements CarpetExtension`，单例 + `init()` 里 `CarpetServer.manageExtension` |
-| 规则 | `settings/CarpetRtsAdditionSettings#rtsRecipes`（默认 `false`）+ `CarpetRuleRegistrar` 包装 `parseSettingsClass` |
+| 规则 | `settings/CarpetRtsAdditionSettings#rtsRecipes`、`#infiniteBuckets`（默认均为 `false`）+ `CarpetRuleRegistrar` 包装 `parseSettingsClass` |
 | 命令 | `commands/RegisterCommands`（空方法，已接进 `registerCommands` 回调） |
-| Mixin | `mixins/RecipeMapMixin`：在 `rtsRecipes` 关闭时从 `RecipeMap` 的匹配与按 ID 查询中剔除本模组配方 |
+| Mixin | `mixins/RecipeMapMixin`：`rtsRecipes` 关闭时剔除本模组配方的匹配与按 ID 查询<br/>`mixins/EnchantmentMixin`：`infiniteBuckets` 开启时允许给水桶/熔岩桶附魔无限<br/>`mixins/BucketItemMixin`：附有无限的水桶/熔岩桶使用后返回副本，不变成空桶 |
 | Access Widener | `carpet-rts-addition.accesswidener` 仅有文件头，已在 `build.gradle` 与 `fabric.mod.json` 登记 |
 | 翻译 | `translations/RtsTranslations` 接进 `canHasTranslations()`，从 `assets/carpet_rts_addition/lang/<lang>.json` 读取 |
 
@@ -237,7 +237,56 @@ flowchart TB
 
 ---
 
-## 8. 构建
+## 8. `infiniteBuckets` 规则（无限桶）
+
+### 8.1 两个注入点
+
+| Mixin | 注入点 | 作用 |
+|---|---|---|
+| `EnchantmentMixin` | `Enchantment#canEnchant(ItemStack)` HEAD | 规则开启时，若 `this` 是无限附魔且物品是水桶/熔岩桶 → 直接返回 `true` |
+| `BucketItemMixin` | `BucketItem#getEmptySuccessItem(ItemStack, Player)` HEAD | 规则开启且桶带无限 → 返回**副本**，让 `use()` 的返回值仍是这只桶 |
+
+`canEnchant` 是铁砧与 `/enchant` 共用的判定（字节码核实：`AnvilMenu.createResult` 与 `EnchantCommand` 都调它），
+所以一处注入同时覆盖两条附魔路径。附魔台不适用：桶没有 `enchantable` 组件，附魔台本身不会给它附魔。
+
+### 8.2 为什么必须返回副本（实测踩坑）
+
+`BucketItem#use` 在成功放置流体后执行：
+
+```java
+ItemStack result = ItemUtils.createFilledResult(stack, player, getEmptySuccessItem(stack, player));
+return InteractionResult.SUCCESS.heldItemTransformedTo(result);
+```
+
+而 `createFilledResult` 在生存模式下会先 `stack.consume(1, player)`，再判断 `stack.isEmpty()`。
+若 `getEmptySuccessItem` 返回**同一个实例**，`consume` 会把它清空，于是玩家手里什么都不剩（桶直接消失）。
+返回 `stack.copy()` 才能既保留附魔，又绕过消耗。创造模式下走的是另一条分支（不消耗），行为不变。
+
+### 8.3 无限附魔如何识别
+
+附魔是数据包注册表（`Registries.ENCHANTMENT`），`/reload` 会重建实例，所以**不能缓存实例做身份比较**。
+`utils/InfinityEnchantment` 在每次判定时从当前服务器的 `registryAccess()` 取 `Enchantments.INFINITY` 的 Holder：
+
+- `isInfinity(Enchantment)`：`holder.value() == enchantment`
+- `hasInfinity(ItemStack)`：`EnchantmentHelper.getItemEnchantmentLevel(holder, stack) > 0`
+
+服务器引用在 `onServerLoaded` 里挂上、`onServerClosed` 里清掉，客户端线程调用时返回 `false`（保持原版行为）。
+
+### 8.4 实测结果（开发服务器 + RCON，生存模式）
+
+| 场景 | 结果 |
+|---|---|
+| 规则关，对水桶 `/enchant infinity` | `Water Bucket cannot support that enchantment` ✅ |
+| 规则开，对水桶 `/enchant infinity` | `Applied enchantment Infinity` ✅ |
+| 规则开，生存模式放置水 | 水已放置、水桶仍在、无空桶 ✅ |
+| 规则开，生存模式放置岩浆 | 岩浆已放置、岩浆桶仍在 ✅ |
+| 规则关，同一只带无限的桶放置水 | 水已放置、水桶消失、得到空桶 ✅ |
+| 规则开，对空桶 / 石头 `/enchant infinity` | 均被拒绝 ✅（只放行水桶/熔岩桶） |
+
+副作用说明：创造模式下铁砧会跳过 `canEnchant`（vanilla 行为，字节码中 `hasInfiniteMaterials()` 分支），
+所以规则关闭时创造模式仍可经**铁砧**给桶附魔，只是不会有无限效果；`/enchant` 没有这个豁免，实测创造模式同样被拒绝。
+
+## 9. 构建
 
 ```bash
 # Windows

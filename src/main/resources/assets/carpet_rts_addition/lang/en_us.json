@@ -1,4 +1,5 @@
 {
   "carpet.category.carpet-rts-addition": "RTS",
+  "carpet.rule.infiniteBuckets.desc": "Water and lava buckets can be enchanted with Infinity, and Infinity buckets are not consumed when used",
   "carpet.rule.rtsRecipes.desc": "Allows the crafting recipes shipped by this mod to be used"
 }

@@ -10,9 +10,11 @@ import carpet_rts_addition.commands.RegisterCommands;
 import carpet_rts_addition.settings.CarpetRtsAdditionSettings;
 import carpet_rts_addition.settings.CarpetRuleRegistrar;
 import carpet_rts_addition.translations.RtsTranslations;
+import carpet_rts_addition.utils.InfinityEnchantment;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.MinecraftServer;
 
 import java.util.Map;
 
@@ -48,6 +50,18 @@ public class CarpetRtsAdditionServer implements CarpetExtension
     public String version()
     {
         return CarpetRtsAdditionMod.getModId();
+    }
+
+    @Override
+    public void onServerLoaded(MinecraftServer server)
+    {
+        InfinityEnchantment.attach(server);
+    }
+
+    @Override
+    public void onServerClosed(MinecraftServer server)
+    {
+        InfinityEnchantment.detach();
     }
 
     @Override
