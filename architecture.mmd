@@ -8,45 +8,45 @@ flowchart TB
         CARPET["🟨 Carpet 模组<br/>规则管家（必须先装）"]
     end
 
-    subgraph MOD["② 本仓库：Carpet-RTS-Addition 扩展模组"]
-        CORE["🧠 总接线员<br/>CarpetRtsAddition"]
-        RULES["⚙️ 公共规则<br/>CarpetRules"]
-        PRIVATE["🔒 私有设置<br/>RtsSettings"]
-        CMD["⌨️ 测试命令<br/>RtsCommand"]
-        DANCE["💃 跳舞钩子<br/>MobMakarenaMixin"]
+    subgraph MOD["② 本仓库：插件骨架"]
+        MODENTRY["🚪 Fabric 入口<br/>CarpetRtsAdditionMod"]
+        CORE["🧠 Carpet 扩展<br/>CarpetRtsAdditionServer"]
+        RULES["⚙️ settings<br/>rtsRecipes"]
+        CMDS["⌨️ commands<br/>RegisterCommands（空）"]
+        TRANS["🌐 translations<br/>RtsTranslations"]
+        MIX["💉 mixins<br/>RecipeMapMixin"]
+        AW["📄 accesswidener（仅文件头）"]
     end
 
     subgraph RESULT["③ 玩家在游戏里看到的结果"]
-        O1["/carpet 多出<br/>makarena 等规则"]
-        O2["独立保存<br/>私有设置"]
-        O3["聊天栏输出<br/>当前设置清单"]
-        O4["附近生物<br/>跳起玛卡瑞纳"]
+        O1["/carpet 里没有任何<br/>本模组新增的规则"]
+        O2["没有本模组新增<br/>命令"]
     end
 
     PLAYER -->|"安装并启动"| FABRIC
     FABRIC -->|"启动"| MC
     FABRIC -->|"装载前置模组"| CARPET
-    FABRIC -->|"装载本模组，调用 onInitialize()"| CORE
-    CARPET -->|"提供 API / 生命周期回调"| CORE
-    CORE -->|"交给 Carpet 解析"| RULES
-    CORE -->|"交给私有管理器"| PRIVATE
-    CORE -->|"注册命令"| CMD
-    RULES -->|"makarena 开关"| DANCE
+    FABRIC -->|"装载本模组，调用 onInitialize()"| MODENTRY
+    MODENTRY -->|"init()"| CORE
+    CARPET -->|"生命周期回调"| CORE
+    CORE -->|"onGameStarted() 解析规则"| RULES
+    CORE -->|"registerCommands()"| CMDS
+    CORE -->|"canHasTranslations()"| TRANS
+    FABRIC -.->|"按配置应用"| MIX
+    FABRIC -.->|"按声明应用"| AW
     RULES --> O1
-    PRIVATE --> O2
-    CMD --> O3
-    DANCE --> O4
+    CMDS --> O2
 
     classDef platform fill:#EAF2FB,stroke:#3B6EA5,stroke-width:1.5px,color:#102A43
     classDef mod fill:#E9F7EF,stroke:#2F7D4F,stroke-width:1.5px,color:#0B3D2E
-    classDef feature fill:#FFF4E5,stroke:#C05621,stroke-width:1.5px,color:#5A2A00
+    classDef empty fill:#F4F4F5,stroke:#9CA3AF,stroke-width:1.5px,color:#374151
     classDef result fill:#FDECEF,stroke:#B8325A,stroke-width:1.5px,color:#4A0D1F
     classDef player fill:#F1EAFE,stroke:#6B46C1,stroke-width:1.5px,color:#2D1B69
 
     class FABRIC,MC,CARPET platform
-    class CORE mod
-    class RULES,PRIVATE,CMD,DANCE feature
-    class O1,O2,O3,O4 result
+    class MODENTRY,CORE mod
+    class RULES,CMDS,TRANS,MIX,AW empty
+    class O1,O2 result
     class PLAYER player
 
     style PLATFORM fill:#F8FAFD,stroke:#C9D6E8,stroke-width:1px,color:#102A43

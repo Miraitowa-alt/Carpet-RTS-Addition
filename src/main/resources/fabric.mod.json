@@ -18,18 +18,20 @@
   "environment": "*",
   "entrypoints": {
     "main": [
-      "carpet_rts_addition.CarpetRtsAddition"
+      "carpet_rts_addition.CarpetRtsAdditionMod"
     ]
   },
   "mixins": [
     "carpet-rts-addition.mixins.json"
   ],
+  "accessWidener": "carpet-rts-addition.accesswidener",
 
   "depends": {
     "minecraft": "~26.3",
     "fabricloader": ">=0.19.5",
     "java": ">=25",
-    "carpet": "*"
+    "carpet": "*",
+    "fabric-resource-loader-v0": "*"
   },
   "suggests": {
     "flamingo": "*"

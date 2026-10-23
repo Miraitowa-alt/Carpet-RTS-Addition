@@ -25,6 +25,13 @@ dependencies {
 
 	// Carpet 26.3 is compiled against official names, so it can be used directly
 	implementation "maven.modrinth:carpet:${project.carpet_version}"
+
+	// Required to load the mod's own data pack (recipes); also makes fabric-resource-loader-v0 available at runtime
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+}
+
+loom {
+	accessWidenerPath = file("src/main/resources/carpet-rts-addition.accesswidener")
 }
 
 processResources {
