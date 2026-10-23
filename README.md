@@ -1,97 +1,46 @@
 # Carpet-RTS-Addition
 
-A [Carpet](https://modrinth.com/mod/carpet) extension for **Minecraft 26.3**.
+面向 Minecraft 26.3 的 Carpet 扩展模组，通过 `/carpet` 开关启用功能，**默认全部关闭**。
 
-It currently adds one rule, `rtsRecipes`, which controls whether the mod's own crafting
-recipes can be used.
+| 规则 | 中文名 | 默认 | 作用 |
+|---|---|---|---|
+| `rtsRecipes` | RTS 配方 | 关 | 启用模组自带的 39 个附加配方 |
+| `infiniteBuckets` | 无限桶 | 关 | 水桶/熔岩桶可附魔"无限"，带无限的桶使用后不被消耗 |
 
-Author: **Miraitowa-alt**
+---
 
-## Toolchain
+## RTS 配方（`rtsRecipes`）
 
-| Component | Version |
-|---|---|
-| Minecraft | 26.3 |
-| Fabric Loader | 0.19.5 |
-| Fabric Loom | 1.18-SNAPSHOT |
-| Fabric API | 0.164.0+26.3 (required: loads the mod's data pack) |
-| Carpet | 26.3 |
-| Java | 25 |
+开启后可以使用模组自带的 39 个配方。它们与原版配方**并存**，不覆盖原版，例如：
 
-Minecraft 26.x ships with official (Mojang) names, so the build does not declare a
-Yarn mappings dependency.
+- 8 个原木 → 4 个箱子
+- 7 个原木 → 4 个木桶 / 8 个堆肥桶 / 24 个梯子
+- 6 个原木 → 16 个对应材质的楼梯（共 12 种材质）
+- 3 个铁块 → 9 个桶
+- 5 个铁块 → 9 个矿车
+- 2 个铁块 → 9 个重型测重压力板
+- 6 个铁块 → 27 个铁门
+- 另有发射器、岩浆膏、西瓜片、铁活板门、铁链、灯笼、箱子/熔炉/TNT/漏斗矿车等便捷配方
 
-> Gradle is pinned to JDK 25 via `org.gradle.java.home` in `gradle.properties`.
-> Update that path if JDK 25 is installed somewhere else.
+**开启**：`/carpet rtsRecipes true`
 
-## Source layout
+关闭时工作台无法匹配这些配方，`/recipe` 也取不到；配方书里可能仍显示条目（内容在世界加载时生成并同步给客户端），但点击无效。
 
-| File | Responsibility |
-|---|---|
-| `CarpetRtsAdditionMod.java` | Fabric `ModInitializer`: reads the mod version, starts the extension |
-| `CarpetRtsAdditionServer.java` | `CarpetExtension` singleton: registers rules, commands and translations |
-| `settings/CarpetRtsAdditionSettings.java` | Rule declarations (`rtsRecipes`) |
-| `settings/CarpetRuleRegistrar.java` | Hands rule classes to Carpet's `SettingsManager` |
-| `translations/RtsTranslations.java` | Loads `assets/carpet_rts_addition/lang/<lang>.json` for Carpet |
-| `commands/RegisterCommands.java` | Command registration entry point (currently empty) |
-| `mixins/RecipeMapMixin.java` | Hides this mod's recipes from recipe lookups while `rtsRecipes` is off |
-| `utils/` | Shared helpers (empty) |
-| `fabric.mod.json` | Mod id, entrypoint, dependencies, mixin config, access widener |
-| `carpet-rts-addition.accesswidener` | Access widener, header only |
-| `data/carpet_rts_addition/recipe/*.json` | 39 crafting recipes (registry path, singular `recipe`) |
+## 无限桶（`infiniteBuckets`）
 
-## Rules
+开启后：
 
-| Rule | Default | Effect |
-|---|---|---|
-| `rtsRecipes` | `false` | While off, the mod's recipes are filtered out of recipe matching (`RecipeMap.getRecipesFor`) and id lookup (`RecipeMap.byKey`), so they cannot be crafted or unlocked. Toggling takes effect immediately, no reload needed. |
-| `infiniteBuckets` | `false` | While on, water and lava buckets accept the Infinity enchantment, and an enchanted bucket is not consumed when used. Applies to the anvil and `/enchant` (both check `Enchantment#canEnchant`); it cannot be obtained from an enchanting table because buckets have no `enchantable` component. Dispenser use is not covered. |
+1. **可以附魔**：给水桶 / 熔岩桶附上"无限"
+   - 铁砧 + 无限附魔书
+   - `/enchant @s minecraft:infinity`（手持水桶/熔岩桶）
+   - 附魔台不行：桶没有 `enchantable` 组件，原版就不会给桶附魔
+2. **使用不消耗**：带无限的桶放置水/岩浆后仍留在手里，附魔保留
 
-Recipes are data pack registry entries in 26.x and cannot be added or removed at runtime,
-which is why `rtsRecipes` filters lookups instead of the registry. The recipe-book *display*
-built at world load may still list them while off; using them fails.
+**开启**：`/carpet infiniteBuckets true`
 
-## Adding another rule
+关闭规则后，已附魔的桶仍保有附魔，但恢复普通消耗（用完变空桶）。
 
-1. Add a `public static` field annotated with `carpet.api.settings.Rule` to
-   `settings/CarpetRtsAdditionSettings.java` — the field name becomes the rule name.
-2. Add its description to `assets/carpet_rts_addition/lang/en_us.json` under
-   `carpet.rule.<field>.desc` (descriptions are not part of the annotation).
-3. Add commands in `commands/RegisterCommands.java`; register mixin classes in
-   `carpet-rts-addition.mixins.json`.
+已知限制：
 
-Rule descriptions and translation keys are documented with verified bytecode evidence in
-`D:\skill\minecraft-carpet-extension\SKILL.md`.
-
-## Gotchas found while building this
-
-- **Mod data needs Fabric API.** Without `fabric-resource-loader-v0`, `/datapack list` only
-  shows `vanilla` and every `data/` file is ignored — recipes silently never load.
-- **Recipe path is singular.** 26.x recipes are registry entries: `data/<namespace>/recipe/`,
-  not `recipes/`.
-- **Tag ingredients are strings:** `"#minecraft:logs"`, not `{"tag": "#minecraft:logs"}`.
-  A malformed entry makes `RegistryDataLoader` fail with `Failed to load registries due to
-  errors`, i.e. the world will not load at all.
-- **Access widener**: first line must be `classTweaker v1 official`, and the file must be
-  saved **without a BOM** — Loom rejects both a BOM and the `named` namespace.
-- **Rule descriptions are translated server-side** from Carpet's `language` rule
-  (`/carpet language <lang>`). A missing `assets/carpet_rts_addition/lang/<lang>.json`
-  makes Carpet print the raw key (`carpet.rule.<name>.desc`), which is what the client sees.
-  This mod ships `en_us` + `zh_cn` and falls back to `en_us` for other languages.
-
-## Build
-
-```bash
-# Windows
-.\gradlew.bat build
-
-# macOS / Linux
-./gradlew build
-```
-
-The mod jar is written to `build/libs/`.
-
-## License
-
-This template is available under the CC0 license. Feel free to learn from it and
-incorporate it in your own projects.
+- 发射器路径不享受无限效果
+- 创造模式的铁砧会跳过"能否附魔"的判定（原版行为），因此创造模式下规则关闭也能附魔，只是没有无限效果
