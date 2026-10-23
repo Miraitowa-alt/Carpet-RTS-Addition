@@ -33,7 +33,6 @@
 1. **可以附魔**：给水桶 / 熔岩桶附上"无限"
    - 铁砧 + 无限附魔书
    - `/enchant @s minecraft:infinity`（手持水桶/熔岩桶）
-   - 附魔台不行：桶没有 `enchantable` 组件，原版就不会给桶附魔
 2. **使用不消耗**：带无限的桶放置水/岩浆后仍留在手里，附魔保留
 
 **开启**：`/carpet infiniteBuckets true`
