@@ -8,7 +8,8 @@
     "BucketItemMixin",
     "CropHarvestMixin",
     "EnchantmentMixin",
-    "RecipeMapMixin"
+    "RecipeMapMixin",
+    "ServerPlayerDamageMixin"
   ],
   "client": [],
   "server": [],

@@ -10,11 +10,13 @@ import carpet_rts_addition.commands.RegisterCommands;
 import carpet_rts_addition.settings.CarpetRtsAdditionSettings;
 import carpet_rts_addition.settings.CarpetRuleRegistrar;
 import carpet_rts_addition.translations.RtsTranslations;
+import carpet_rts_addition.utils.AfkProtection;
 import carpet_rts_addition.utils.InfinityEnchantment;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Map;
 
@@ -59,9 +61,22 @@ public class CarpetRtsAdditionServer implements CarpetExtension
     }
 
     @Override
+    public void onTick(MinecraftServer server)
+    {
+        AfkProtection.tick(server);
+    }
+
+    @Override
+    public void onPlayerLoggedOut(ServerPlayer player)
+    {
+        AfkProtection.forget(player);
+    }
+
+    @Override
     public void onServerClosed(MinecraftServer server)
     {
         InfinityEnchantment.detach();
+        AfkProtection.reset();
     }
 
     @Override

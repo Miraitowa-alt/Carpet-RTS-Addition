@@ -30,4 +30,7 @@ public final class CarpetRtsAdditionSettings
 
     @Rule(categories = "carpet-rts-addition")
     public static boolean boneMealCatalyst = false;
+
+    @Rule(categories = "carpet-rts-addition")
+    public static boolean afkPlayerProtection = false;
 }

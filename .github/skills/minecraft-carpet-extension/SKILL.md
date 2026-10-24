@@ -255,9 +255,11 @@ ItemStack result = ItemUtils.createFilledResult(stack, player, getEmptySuccessIt
 | `mixins/BucketItemMixin` | `getEmptySuccessItem` HEAD：返回 `copy()` 保住桶 |
 | `mixins/CropHarvestMixin` | `BlockBehaviour#useItemOn` / `#useWithoutItem` HEAD：交给 `rightClickHarvest` 判定 |
 | `mixins/BoneMealItemMixin` | `BoneMealItem#useOn` HEAD：交给 `boneMealCatalyst` 判定 |
+| `mixins/ServerPlayerDamageMixin` | `ServerPlayer#hurtServer` HEAD：`afkPlayerProtection` 命中则直接返回 `false` |
 | `utils/InfinityEnchantment` | 每次现取 registry 的 Infinity Holder（`/reload` 重建后仍正确） |
 | `utils/RightClickHarvest` | 成熟 `CropBlock` 收割 + 补种（种子 = 该作物方块对应的 `BlockItem`） |
 | `utils/BoneMealCatalyst` | 骨粉催熟甘蔗/仙人掌/地狱疣/藤蔓（原版 `growCrop` 拒绝的方块） |
+| `utils/AfkProtection` | 挂机判定（60 秒无移动/转头/点击）+ 四类意外伤害过滤 |
 
 ### 11.3 已实现的规则
 
@@ -267,6 +269,7 @@ ItemStack result = ItemUtils.createFilledResult(stack, player, getEmptySuccessIt
 | `infiniteBuckets` | `/carpet infiniteBuckets true` | 桶可附无限，使用后不被消耗 |
 | `rightClickHarvest` | `/carpet rightClickHarvest true` | 右键成熟作物收割并补种；潜行时不触发 |
 | `boneMealCatalyst` | `/carpet boneMealCatalyst true` | 骨粉催熟甘蔗/仙人掌/地狱疣/藤蔓，每次消耗一个 |
+| `afkPlayerProtection` | `/carpet afkPlayerProtection true` | 挂机玩家与假人免疫窒息/雷击/摔落/幻翼；60 秒无操作判定挂机 |
 
 两条都注册进 `CarpetServer.settingsManager` → **翻译键前缀是 `carpet.`**，
 而语言文件路径是 `assets/carpet_rts_addition/lang/`（两者不同，见 [docs/dev-log/2026-10-23-carpet-rule-translation-keys.md](../../../docs/dev-log/2026-10-23-carpet-rule-translation-keys.md)）。
@@ -295,6 +298,7 @@ ItemStack result = ItemUtils.createFilledResult(stack, player, getEmptySuccessIt
 | 发射器路径 | 带无限的桶经发射器射出仍会被消耗 |
 | 右键收割覆盖面 | 只处理 `CropBlock`（小麦/胡萝卜/马铃薯/甜菜根）；下界疣、可可豆不支持 |
 | 骨粉催化覆盖面 | 只处理甘蔗/仙人掌/地狱疣/藤蔓；竹子、海带等本身已可催熟的植物走原版逻辑 |
+| 挂机保护覆盖面 | 只拦 `in_wall`/`lightning_bolt`/`fall` 与幻翼攻击；虚空、岩浆、其他生物照常致死 |
 | `en_us` 无规则名 | 英文下显示裸 ID，与 Carpet 自带规则一致 |
 | 无单元测试 | 验证靠 `gradlew build` + 开发服 RCON（`/datapack list`、`/recipe give`、`/enchant`、生存模式放水） |
 
@@ -318,5 +322,8 @@ ItemStack result = ItemUtils.createFilledResult(stack, player, getEmptySuccessIt
 断言方式：`/execute if block <pos> <block>[state]` 输出 `Test passed/failed`；
 背包数量用 `/execute as <名称> run clear @s <物品> 0`（只统计不删除）。
 掉落物若落在玩家附近会被立刻捡走，判断"是否掉落"要看背包，不要用 `@e[type=item,distance=..N]`。
+伤害类规则用 `/damage <目标> <数值> <伤害类型> [by <实体>]` 验证：被拦截时输出
+`Target is invulnerable to the given damage type`，正常生效时输出 `Applied X damage`；
+`by <实体>` 可区分"幻翼攻击"与"普通生物攻击"。想看真实摔落，直接 `tp` 到高处即可。
 
 
