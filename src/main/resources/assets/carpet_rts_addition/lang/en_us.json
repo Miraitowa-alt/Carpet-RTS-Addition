@@ -5,7 +5,7 @@
   "carpet.rule.boneMealCatalyst.desc": "Bone meal also grows sugar cane, cactus, nether wart and vines, consuming one bone meal per use",
   "carpet.rule.afkPlayerProtection.desc": "Idle players and Carpet fake players are immune to suffocation, lightning, fall damage and phantoms",
   "carpet.rule.autoEatAfk.desc": "Idle players and fake players automatically eat food from their inventory when their hunger drops below the threshold",
-  "carpet.rule.autoEatAfkTarget.desc": "Who is fed: fakePlayers (Carpet bots), idlePlayers (real players only) or all",
+  "carpet.rule.autoEatAfkTarget.desc": "Who is fed: fakePlayers (Carpet bots), trueplayer (real players only) or all",
   "carpet.rule.autoEatAfkThreshold.desc": "Food level (0-20) that triggers automatic eating",
   "carpet.rule.autoEatAfkFoods.desc": "Allowed foods: * for any food, or a comma separated list of item ids",
   "carpet.rule.rtsRecipes.desc": "Allows the crafting recipes shipped by this mod to be used"

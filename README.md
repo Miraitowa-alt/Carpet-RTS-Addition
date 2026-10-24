@@ -10,7 +10,7 @@
 | `boneMealCatalyst` | 骨粉催化 | 关 | 骨粉可催化甘蔗、仙人掌、地狱疣、藤蔓 |
 | `afkPlayerProtection` | 挂机保护 | 关 | 挂机玩家与假人免疫窒息、雷击、摔落、幻翼 |
 | `autoEatAfk` | 挂机自动进食 | 关 | 挂机时饱食度低于阈值自动进食 |
-| `autoEatAfkTarget` | 自动进食对象 | `all` | `fakePlayers` / `idlePlayers` / `all` |
+| `autoEatAfkTarget` | 自动进食对象 | `all` | `fakePlayers` / `trueplayer` / `all` |
 | `autoEatAfkThreshold` | 自动进食阈值 | 6 | 饱食度低于此值时进食（0-20） |
 | `autoEatAfkFoods` | 自动进食食物 | `*` | `*` 或逗号分隔的物品 ID 列表 |
 
@@ -117,7 +117,7 @@
 
 - **开启**：`/carpet autoEatAfk true`
 - **阈值**：`/carpet autoEatAfkThreshold 6`（0-20，默认 6，即 3 格饥饿值）
-- **对象**：`/carpet autoEatAfkTarget all`（`fakePlayers` 只喂假人 / `idlePlayers` 只喂真人 / `all` 两者都喂）
+- **对象**：`/carpet autoEatAfkTarget all`（`fakePlayers` 只喂假人 / `trueplayer` 只喂真人 / `all` 两者都喂）
 - **食物**：`/carpet autoEatAfkFoods *`（`*` 任意食物；也可写 `minecraft:baked_potato,minecraft:bread`）
 
 行为细节：

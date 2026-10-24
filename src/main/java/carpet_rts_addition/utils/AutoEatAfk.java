@@ -94,7 +94,7 @@ public final class AutoEatAfk
         {
             return fake;
         }
-        if ("idlePlayers".equals(target))
+        if ("trueplayer".equals(target))
         {
             return !fake && AfkProtection.isIdle(player);
         }

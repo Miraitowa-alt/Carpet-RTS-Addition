@@ -13,7 +13,7 @@
   "carpet.rule.autoEatAfk.name": "挂机自动进食",
   "carpet.rule.autoEatAfk.desc": "挂机玩家与假人饱食度低于阈值时自动进食背包中的食物",
   "carpet.rule.autoEatAfkTarget.name": "自动进食对象",
-  "carpet.rule.autoEatAfkTarget.desc": "喂食对象：fakePlayers（假人）、idlePlayers（仅真人）或 all",
+  "carpet.rule.autoEatAfkTarget.desc": "喂食对象：fakePlayers（假人）、trueplayer（仅真人）或 all",
   "carpet.rule.autoEatAfkThreshold.name": "自动进食阈值",
   "carpet.rule.autoEatAfkThreshold.desc": "触发自动进食的饱食度（0-20）",
   "carpet.rule.autoEatAfkFoods.name": "自动进食食物",

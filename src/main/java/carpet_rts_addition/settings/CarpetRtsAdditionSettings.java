@@ -37,7 +37,7 @@ public final class CarpetRtsAdditionSettings
     @Rule(categories = "carpet-rts-addition")
     public static boolean autoEatAfk = false;
 
-    @Rule(categories = "carpet-rts-addition", options = {"fakePlayers", "idlePlayers", "all"})
+    @Rule(categories = "carpet-rts-addition", options = {"fakePlayers", "trueplayer", "all"})
     public static String autoEatAfkTarget = "all";
 
     @Rule(categories = "carpet-rts-addition", validators = {AutoEatValidators.FoodLevel.class})
