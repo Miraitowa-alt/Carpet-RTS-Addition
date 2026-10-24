@@ -139,7 +139,7 @@ public static class Range extends Validator<Integer>
   按命名空间判定归属。切换即时生效，无需 `/reload`。
 - 开发环境改完要 `gradlew processResources` 再 `/reload`（读的是 `build/resources/main`）。
 
-## 7. 改物品 / 附魔行为的两个模式
+## 7. 改物品 / 附魔 / 实体行为的模式
 
 **A. 替换"消耗型"返回值必须返回副本**
 
@@ -169,12 +169,37 @@ server.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
 它内部依次做粒子音效、统计与成就、`FoodProperties#onConsume`、`ConsumeEffect` 列表、`consume(1, entity)`。
 比手写"加数值 + 放音效 + 扣物品"更稳，也自动兼容模组食物。
 
-## 8. 加一个功能的落地清单
+**D. 把实体打包进物品（搬运/套索类功能）**
 
+写入用 `DataComponents.ENTITY_DATA`（`TypedEntityData<EntityType<?>>`），它是原版就给物品留的
+"实体快照"槽位，带 tooltip：
+
+```java
+// 保存：ValueOutput 拿不到现成实例时用 TagValueOutput 包一层
+TagValueOutput out = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, entity.registryAccess());
+entity.saveWithoutId(out);
+ItemStack filled = stack.copyWithCount(1);
+filled.set(DataComponents.ENTITY_DATA, TypedEntityData.of(entity.getType(), out.buildResult()));
+entity.discard();
+
+// 还原：先建空实体，再 loadInto，最后摆位置
+Entity spawned = data.type().create(level, EntitySpawnReason.SPAWN_ITEM_USE);
+data.loadInto(spawned);              // 内部会保留新实体自己的 UUID，不会复制 UUID
+spawned.snapTo(x, y, z, yaw, 0.0F);  // 覆盖 tag 里的旧坐标
+level.addFreshEntity(spawned);
+```
+
+- `loadInto` 会先保存当前实体再合并 tag、加载、并把 UUID 设回新实体，所以反复打包/放出不会撞 UUID。
+- 只打包 `Mob`，并显式排除末影龙/凋灵这类不该被搬运的实体。
+- **物品已装满时要拦截原版行为**：返回 `InteractionResult.SUCCESS`（不要返回 `null`），
+  否则原版逻辑（如拴绳的系绳）会消耗掉这个物品，连带丢掉里面存的实体。
+
+## 8. 加一个功能的落地清单
 1. 规则字段 → `settings/XxxSettings`，`@Rule(categories = "...")`，默认值走"保守/关闭"。
 2. 翻译 → `assets/<ns>/lang/zh_cn.json`、`en_us.json` 各补 `.desc`（中文再补 `.name`）。
 3. 行为判定 → `utils/` 新建纯静态类，返回 `null` / `Optional` 表示"不接管，交还原版"。
 4. 注入 → `mixins/` 新建类，**注入点选最上游的公共入口**（能一处覆盖多条路径就不要再散开）。
+   判断"最上游"时要记住：Carpet 假玩家会绕过一部分入口（见 §二.3）。
 5. 登记 → `<modid>.mixins.json` 的 `mixins` 列表，类名相对 `package`。
 6. 构建 → `gradlew compileJava`（能暴露注解类型/泛型不匹配），再 `gradlew build`。
 7. 进游戏验证（见 §二.3）。
@@ -238,17 +263,27 @@ server.registryAccess().lookupOrThrow(Registries.ENCHANTMENT)
 | `spawn-protection>0` | 出生点范围内 `mayInteract` 为 false，假玩家右键毫无反应（连门都开不了） | 测试场地放到保护范围外 |
 | 方块碰撞箱很薄（藤蔓、地毯） | `look at` 瞄方块中心时射线穿孔，右键无响应 | 瞄具体面（如 `x+0.03`） |
 | 掉落物被立即捡走 | 用 `@e[type=item,distance=..N]` 判断"有没有掉落"永远失败 | 改用背包数量断言 |
+| 世界里本来就有同类生物 | `execute if entity @e[type=cow]` 永远 `Test passed`，看不出到底有没有处理到目标 | 测试前 `kill @e[type=...]`，或改用"目标坐标处的方块/背包"断言 |
+| 规则改动只在本次会话有效 | 重启后规则回默认，功能"莫名其妙又失效了" | 每次重启后重新 `carpet <rule> true`；持久化要靠玩家确认或写 `world/carpet.conf` |
+| 用子进程跑 RCON 脚本 | 命令里的 `"引号"` 被二次解析吃掉，`[custom_name="套索"]` 变成非法 SNBT | 在同一个 PowerShell 进程里 `& rcon.ps1 -Command '...'` |
 
 常用断言/操作：
 
 ```text
 /player <名称> spawn at <x> <y> <z> facing <yaw> <pitch>   # 起假人（偶尔返回空、1 秒后才加入）
 /player <名称> look at <x> <y> <z>                          # 瞄准
+/player <名称> hotbar <1-9>                                 # 切换快捷栏槽位
 /player <名称> use                                          # 右键
 /execute if block <pos> <block>[state]                      # Test passed / Test failed
 /execute as <名称> run clear @s <物品> 0                     # 只统计不删除，看背包数量
 /damage <目标> <数值> <type> [by <实体>]                     # 被拦截=Target is invulnerable；正常=Applied X damage
+/data get entity <目标> Inventory                           # 看物品组件（entity_data 等）
 ```
+
+`/player <名称> use` 的执行顺序与真实客户端**不同**：它先调 `entity.interact(...)`，
+一旦返回 `consumesAction()` 就直接结束，**不会**再走 `Player#interactOn`。
+所以只注入 `Player#interactOn` 的功能用假人测不出来（村民会先打开交易界面）。
+要同时覆盖两条路径，就再注入一次 `Mob#interact`（幂等靠 `isAlive()` / 状态判断兜住）。
 
 - 玩家的 `foodLevel` **不能** `data merge`，只能靠 `/effect give <名称> minecraft:hunger <秒> <倍率>`；
   倍率要拉到 ~250，否则饱和度和 4 点/格的消耗速率会让饥饿值几乎不掉。

@@ -8,6 +8,9 @@
     "BucketItemMixin",
     "CropHarvestMixin",
     "EnchantmentMixin",
+    "LeadItemMixin",
+    "MobInteractMixin",
+    "PlayerInteractMixin",
     "RecipeMapMixin",
     "ServerPlayerDamageMixin"
   ],

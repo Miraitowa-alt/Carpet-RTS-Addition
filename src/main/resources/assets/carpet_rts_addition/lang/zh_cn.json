@@ -17,5 +17,9 @@
   "carpet.rule.autoEatAfkThreshold.name": "自动进食阈值",
   "carpet.rule.autoEatAfkThreshold.desc": "触发自动进食的饱食度（0-20）",
   "carpet.rule.autoEatAfkFoods.name": "自动进食食物",
-  "carpet.rule.autoEatAfkFoods.desc": "允许的食物：* 表示任意食物，或逗号分隔的物品 ID 列表"
+  "carpet.rule.autoEatAfkFoods.desc": "允许的食物：* 表示任意食物，或逗号分隔的物品 ID 列表",
+  "carpet.rule.betterLead.name": "更好的拴绳",
+  "carpet.rule.betterLead.desc": "改名为指定名称的拴绳可右键捕捉生物，再右键方块放出",
+  "carpet.rule.betterLeadName.name": "套索名称",
+  "carpet.rule.betterLeadName.desc": "把拴绳变成套索所需的自定义名称"
 }

@@ -8,5 +8,7 @@
   "carpet.rule.autoEatAfkTarget.desc": "Who is fed: fakePlayers (Carpet bots), trueplayer (real players only) or all",
   "carpet.rule.autoEatAfkThreshold.desc": "Food level (0-20) that triggers automatic eating",
   "carpet.rule.autoEatAfkFoods.desc": "Allowed foods: * for any food, or a comma separated list of item ids",
+  "carpet.rule.betterLead.desc": "A lead renamed to the configured lasso name captures a mob on right-click and releases it when used on a block",
+  "carpet.rule.betterLeadName.desc": "Item name that turns a lead into a lasso",
   "carpet.rule.rtsRecipes.desc": "Allows the crafting recipes shipped by this mod to be used"
 }

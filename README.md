@@ -13,6 +13,8 @@
 | `autoEatAfkTarget` | 自动进食对象 | `all` | `fakePlayers` / `trueplayer` / `all` |
 | `autoEatAfkThreshold` | 自动进食阈值 | 6 | 饱食度低于此值时进食（0-20） |
 | `autoEatAfkFoods` | 自动进食食物 | `*` | `*` 或逗号分隔的物品 ID 列表 |
+| `betterLead` | 更好的拴绳 | 关 | 命名为 Lasso 的拴绳可捕捉/释放生物 |
+| `betterLeadName` | 套索名称 | `Lasso` | 触发捕捉所需的物品自定义名称 |
 
 ---
 
@@ -129,3 +131,25 @@
 
 建议：默认 `*` 会把金苹果、附魔金苹果也算作可用食物；挂机场建议显式指定廉价食物，例如
 `/carpet autoEatAfkFoods minecraft:baked_potato,minecraft:bread,minecraft:cooked_beef`。
+
+## 更好的拴绳（`betterLead`）
+
+开启后，**改名为 `Lasso`** 的拴绳变成"套索"：
+
+1. **捕捉**：手持套索右键生物（村民、动物、怪物等）→ 生物被收进物品，物品落入背包
+2. **释放**：手持套索右键方块表面 → 生物在点击位置旁边重新出现，套索变回空套索可继续使用
+
+**开启**：`/carpet betterLead true`
+
+**改名**：铁砧把拴绳改名为 `Lasso`，或用 `/give @s minecraft:lead[custom_name='"Lasso"']`。
+想换成别的名字（例如 `套索`）：`/carpet betterLeadName 套索`
+
+细节：
+
+- 捕捉保存的是生物的**完整 NBT**（生命、成长阶段、村民职业与交易、马匹属性、宠物主人、自定义名称、装备等），释放后与原生物一致
+- 释放时使用新的 UUID 并面向玩家，因此反复捕捉/释放不会产生 UUID 冲突或复制
+- 末影龙、凋灵无法被捕捉；玩家、盔甲架、展示框等非生物实体也不受影响
+- 未改名的拴绳行为完全不变（仍可用于拴住并牵引生物）
+- 生物身上的乘客/坐骑不会被一起打包；捕捉前请先让它们下来
+- 创造模式捕捉不消耗拴绳（与原版创造模式的规则一致）
+

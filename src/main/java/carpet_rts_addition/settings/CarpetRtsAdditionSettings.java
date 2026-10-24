@@ -45,4 +45,10 @@ public final class CarpetRtsAdditionSettings
 
     @Rule(categories = "carpet-rts-addition", validators = {AutoEatValidators.FoodList.class})
     public static String autoEatAfkFoods = "*";
+
+    @Rule(categories = "carpet-rts-addition")
+    public static boolean betterLead = false;
+
+    @Rule(categories = "carpet-rts-addition", validators = {LeadValidators.LassoName.class})
+    public static String betterLeadName = "Lasso";
 }
