@@ -15,6 +15,7 @@
 | `autoEatAfkFoods` | 自动进食食物 | `*` | `*` 或逗号分隔的物品 ID 列表 |
 | `betterLead` | 更好的拴绳 | 关 | 命名为 Lasso 的拴绳可捕捉/释放生物 |
 | `betterLeadName` | 套索名称 | `Lasso` | 触发捕捉所需的物品自定义名称 |
+| `fakePlayerPickup` | 假人拾取控制 | 关 | 对指定假人按黑白名单过滤拾取物 |
 
 ---
 
@@ -153,3 +154,51 @@
 - 生物身上的乘客/坐骑不会被一起打包；捕捉前请先让它们下来
 - 创造模式捕捉不消耗拴绳（与原版创造模式的规则一致）
 
+## 假人物品拾取控制（`fakePlayerPickup`）
+
+控制 Carpet 假人（`/player`）能捡起什么，避免挂机假人把杂物全塞进背包。
+
+**开关**：`/carpet fakePlayerPickup true`（默认关闭，持久化在 `carpet.conf`）
+
+**配置**：全部走 `/fakePlayerPickup` 命令，参数都支持 TAB 补全
+
+| 命令 | 作用 | 反馈 |
+|---|---|---|
+| `/fakePlayerPickup` | 显示开关、模式、过滤清单、生效假人 | `fakePlayerPickup: on \| mode: blacklist \| items: ... \| fake players: ...` |
+| `/fakePlayerPickup mode <模式>` | `off` 不过滤 / `blacklist` 清单内不捡 / `whitelist` 只捡清单内 | `拾取模式已设为 blacklist` |
+| `/fakePlayerPickup items list` | 查看过滤物品清单（`items` 单独使用同效） | `过滤物品清单：minecraft:diamond` |
+| `/fakePlayerPickup items set <物品ID>` | 加入过滤清单（TAB 补全物品 ID，可省略 `minecraft:`） | `minecraft:diamond 已添加` |
+| `/fakePlayerPickup items remove <物品ID>` | 从清单移除 | `minecraft:diamond 已删除` |
+| `/fakePlayerPickup items clear` | 清空清单 | `过滤清单已清空` |
+| `/fakePlayerPickup player list` | 查看生效假人（`player` 单独使用同效）；未配置时显示 `（空）` | `拾取过滤生效的假人：RtsBot` |
+| `/fakePlayerPickup player set <假人>` | 把假人加入生效列表（TAB 补全在线假人，逗号分隔多个） | `RtsBot 已添加` |
+| `/fakePlayerPickup player set *` | 把当前所有在线假人一次性加入列表 | `RtsBot, OtherBot 已添加` |
+| `/fakePlayerPickup player remove <假人>` | 从生效列表移除假人 | `RtsBot 已删除` |
+| `/fakePlayerPickup player remove *` | 清空生效列表（回到"谁都不拦"） | `RtsBot, OtherBot 已删除` |
+
+示例（只让农场假人不捡腐肉和骨头）：
+
+```
+/carpet fakePlayerPickup true
+/fakePlayerPickup mode blacklist
+/fakePlayerPickup items set minecraft:rotten_flesh
+/fakePlayerPickup items set minecraft:bone
+/fakePlayerPickup player set RtsBot_Farm
+```
+
+说明：
+
+- **默认模式是 `blacklist`、物品清单与假人列表都为空**，所以只开开关不会有任何变化，要 `items set` 加物品、`player set` 加假人才生效
+- `player set <假人>` 是**追加**（不是替换），可以多次添加多个假人；`player set *` 只是把当前在线假人一次性加进来，不是常驻的"全部"开关
+- **假人列表为空 = 谁都不拦**，此时假人照常拾取；想恢复"谁都管"要重新 `player set`
+- `player set *` 只按**当前在线**假人展开一次，不会记录"以后新加的假人也自动生效"；没有在线假人时会提示失败
+- 列表里记的是名字，假人下线后名字仍保留（重新上线继续生效）；要清空用 `player remove *`
+- `player remove` 删掉最后一个假人后列表变空，过滤立即失效（`list` 显示 `（空）`）
+- `whitelist` + 空物品列表 = 什么都不捡，这是有用配置；配错了用 `items clear` / `mode off` 恢复
+- 配置命令在开关关闭时也能用，方便先配好再开启
+- 只影响**假人**，真人玩家完全不受影响
+- 被拦下的物品留在地上（不会被删除），改配置后立刻恢复拾取
+- 物品按 ID 精确匹配，不支持标签（`#minecraft:logs`）
+- 与 `autoEatAfk` 互不干扰：自动进食是从背包取，不走拾取流程
+- 假人自己丢弃的物品同样受此规则约束
+- ⚠️ 模式/物品/假人列表保存在内存中，**重启服务器后重置为默认**（`/carpet fakePlayerPickup` 开关本身会保留），重启后用 `carpet.conf` 或重新执行命令

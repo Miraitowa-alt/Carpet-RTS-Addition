@@ -8,6 +8,7 @@
     "BucketItemMixin",
     "CropHarvestMixin",
     "EnchantmentMixin",
+    "ItemEntityPickupMixin",
     "LeadItemMixin",
     "MobInteractMixin",
     "PlayerInteractMixin",

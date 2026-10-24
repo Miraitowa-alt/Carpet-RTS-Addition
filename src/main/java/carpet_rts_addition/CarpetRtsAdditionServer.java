@@ -13,6 +13,7 @@ import carpet_rts_addition.translations.RtsTranslations;
 import carpet_rts_addition.utils.AfkProtection;
 import carpet_rts_addition.utils.AutoEatAfk;
 import carpet_rts_addition.utils.InfinityEnchantment;
+import carpet_rts_addition.utils.PickupFilter;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -81,6 +82,7 @@ public class CarpetRtsAdditionServer implements CarpetExtension
         InfinityEnchantment.detach();
         AfkProtection.reset();
         AutoEatAfk.reset();
+        PickupFilter.reset();
     }
 
     @Override

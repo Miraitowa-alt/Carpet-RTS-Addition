@@ -43,7 +43,7 @@ public final class CarpetRtsAdditionSettings
     @Rule(categories = "carpet-rts-addition", validators = {AutoEatValidators.FoodLevel.class})
     public static int autoEatAfkThreshold = 6;
 
-    @Rule(categories = "carpet-rts-addition", validators = {AutoEatValidators.FoodList.class})
+    @Rule(categories = "carpet-rts-addition", validators = {ListValidators.ItemIds.class})
     public static String autoEatAfkFoods = "*";
 
     @Rule(categories = "carpet-rts-addition")
@@ -51,4 +51,7 @@ public final class CarpetRtsAdditionSettings
 
     @Rule(categories = "carpet-rts-addition", validators = {LeadValidators.LassoName.class})
     public static String betterLeadName = "Lasso";
+
+    @Rule(categories = "carpet-rts-addition")
+    public static boolean fakePlayerPickup = false;
 }

@@ -6,6 +6,7 @@ package carpet_rts_addition.translations;
 
 import carpet.utils.Translations;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -32,7 +33,16 @@ public final class RtsTranslations
             // Carpet shows the raw translation key when a language is missing, so fall back to English
             translations = load(FALLBACK_LANGUAGE);
         }
-        return translations;
+        // Only carpet.* keys belong to Carpet; the rest are vanilla/client translations and would
+        // trigger Carpet's "outdated translation keys" warning if passed through
+        Map<String, String> carpetKeys = new HashMap<>();
+        translations.forEach((key, value) -> {
+            if (key.startsWith("carpet."))
+            {
+                carpetKeys.put(key, value);
+            }
+        });
+        return carpetKeys;
     }
 
     private static Map<String, String> load(String lang)

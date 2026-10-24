@@ -194,7 +194,50 @@ level.addFreshEntity(spawned);
 - **物品已装满时要拦截原版行为**：返回 `InteractionResult.SUCCESS`（不要返回 `null`），
   否则原版逻辑（如拴绳的系绳）会消耗掉这个物品，连带丢掉里面存的实体。
 
-## 8. 加一个功能的落地清单
+**E. 拦截玩家拾取**
+
+注入 `ItemEntity#playerTouch(Player)` 的 HEAD 并 `ci.cancel()`：它已经是**唯一**的服务端拾取入口
+（客户端与 `pickupDelay` 未到都会提前 return），取消后物品原地保留、下一 tick 还会重试。
+
+不要改 `Inventory#add` —— 命令发放、合成、容器转移全都走它，会误伤。
+
+按玩家区分时用 `player instanceof EntityPlayerMPFake` 判断假人；名称用
+`player.getScoreboardName()`（就是 `/list` 里显示的名字，比 `getName()` 的 Component 好比较）。
+
+## 8. 注册命令（含 TAB 补全）
+
+入口在 `CarpetExtension#registerCommands(dispatcher, buildContext)`，转发到自己的 `commands` 包：
+
+```java
+dispatcher.register(Commands.literal("myFeature")
+        .executes(ctx -> status(ctx.getSource()))                          // 裸命令 = 状态
+        .then(Commands.literal("mode")
+                .then(Commands.argument("mode", StringArgumentType.word())
+                        .suggests((ctx, b) -> SharedSuggestionProvider.suggest(MODES, b))
+                        .executes(ctx -> setMode(ctx.getSource(),
+                                StringArgumentType.getString(ctx, "mode")))))
+        .then(Commands.argument("item", IdentifierArgument.id())            // 带命名空间的 ID 用它
+                .suggests((ctx, b) -> SharedSuggestionProvider.suggestResource(
+                        BuiltInRegistries.ITEM.keySet(), b))
+                .executes(ctx -> addItem(ctx.getSource(), IdentifierArgument.getId(ctx, "item")))));
+```
+
+- **物品/方块/实体 ID 用 `IdentifierArgument.id()`**，`StringArgumentType.word()` 只匹配
+  `[a-zA-Z0-9_]`，遇到 `minecraft:diamond` 里的 `:` 会直接 `Expected whitespace` 报错。
+- ID 补全用 `SharedSuggestionProvider.suggestResource(<registry>.keySet(), builder)`；
+  字符串补全用 `SharedSuggestionProvider.suggest(Iterable<String>, builder)`。
+- 需要自由文本（含逗号、点号）时用 `StringArgumentType.greedyString()`，`word()` 也会拒绝逗号。
+- 子命令与同名参数冲突时字面量优先（`items clear` 不会被当成物品 ID），但顺序上先注册字面量更稳。
+- 服务端反馈：`source.sendSuccess(Supplier<Component>, broadcast)` / `source.sendFailure(Component)`。
+  给玩家看的文案用 `Component.translatableWithFallback(key, englishFallback, args)`——
+  客户端按自己的语言显示，控制台/RCON 显示 fallback，不会打出原始 key。
+- 命令文案的翻译键**不要**混进 `canHasTranslations` 返回的 map（Carpet 会对非 `carpet.` 前缀
+  的键打"outdated translation keys"警告）。本项目做法：`RtsTranslations` 只透传 `carpet.` 开头的键，
+  其余键留在同一个 lang 文件里给客户端用。
+- 配置类状态想持久化就做成 `@Rule`；用命令管理的临时状态放 `utils` 的静态字段，
+  并在 `onServerClosed` 里 reset。
+
+## 9. 加一个功能的落地清单
 1. 规则字段 → `settings/XxxSettings`，`@Rule(categories = "...")`，默认值走"保守/关闭"。
 2. 翻译 → `assets/<ns>/lang/zh_cn.json`、`en_us.json` 各补 `.desc`（中文再补 `.name`）。
 3. 行为判定 → `utils/` 新建纯静态类，返回 `null` / `Optional` 表示"不接管，交还原版"。
@@ -202,7 +245,8 @@ level.addFreshEntity(spawned);
    判断"最上游"时要记住：Carpet 假玩家会绕过一部分入口（见 §二.3）。
 5. 登记 → `<modid>.mixins.json` 的 `mixins` 列表，类名相对 `package`。
 6. 构建 → `gradlew compileJava`（能暴露注解类型/泛型不匹配），再 `gradlew build`。
-7. 进游戏验证（见 §二.3）。
+7. 要命令就注册到 `commands/`（见 §8），ID 类参数一律用 `IdentifierArgument`。
+8. 进游戏验证（见 §二.3）。
 
 > 更细的签名核实命令见 [references/api-notes.md](./references/api-notes.md)，
 > 26.x 配方完整格式与实测矩阵见 [references/recipes.md](./references/recipes.md)。
@@ -236,6 +280,12 @@ level.addFreshEntity(spawned);
 14. **客户端预测要与服务端一致**：返回 `InteractionResult.SUCCESS` 让客户端不落回"放方块"，
     只有 `ServerLevel` 分支才改世界，否则单机重复执行。
 15. **数据包改动不要直接改 `src` 后立刻测**：`/reload` 读的是 `build/resources/main`。
+16. **列表类规则抽一个共享校验器**：物品 ID 列表、玩家名列表这类校验会被多条规则用到，
+    写在 `settings/ListValidators` 里复用；解析结果按"原始字符串"做缓存键，规则值一变就自然失效。
+17. **白/黑名单共用一个列表**：用 `mode`（`off`/`blacklist`/`whitelist`）+ 一个物品列表，
+    比两条独立规则更不容易配错，也能直接 `options = {...}` 拿到补全与非法值提示。
+18. **`StringArgumentType.word()` 不接受 `:` 和 `,`**：命令参数是 ID 就用 `IdentifierArgument`，
+    要自由文本就用 `greedyString()`，否则用户输入 `minecraft:diamond` 会报 `Expected whitespace`。
 
 ## 2. 故障对照
 
@@ -278,6 +328,8 @@ level.addFreshEntity(spawned);
 /execute as <名称> run clear @s <物品> 0                     # 只统计不删除，看背包数量
 /damage <目标> <数值> <type> [by <实体>]                     # 被拦截=Target is invulnerable；正常=Applied X damage
 /data get entity <目标> Inventory                           # 看物品组件（entity_data 等）
+/summon minecraft:item <x> <y> <z> {Item:{id:"minecraft:diamond",count:1},PickupDelay:0s}
+                                                             # 造一个可立即拾取的掉落物（测拾取逻辑）
 ```
 
 `/player <名称> use` 的执行顺序与真实客户端**不同**：它先调 `entity.interact(...)`，
