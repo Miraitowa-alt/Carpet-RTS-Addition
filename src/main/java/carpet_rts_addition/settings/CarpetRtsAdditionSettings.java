@@ -24,4 +24,7 @@ public final class CarpetRtsAdditionSettings
 
     @Rule(categories = "carpet-rts-addition")
     public static boolean infiniteBuckets = false;
+
+    @Rule(categories = "carpet-rts-addition")
+    public static boolean rightClickHarvest = false;
 }

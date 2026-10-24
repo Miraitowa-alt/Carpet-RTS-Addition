@@ -3,5 +3,7 @@
   "carpet.rule.infiniteBuckets.name": "无限桶",
   "carpet.rule.infiniteBuckets.desc": "水桶与熔岩桶可以附魔无限，附有无限的水桶/熔岩桶使用后不会被消耗",
   "carpet.rule.rtsRecipes.name": "RTS 配方",
-  "carpet.rule.rtsRecipes.desc": "启用后可以使用本模组新增的合成配方"
+  "carpet.rule.rtsRecipes.desc": "启用后可以使用本模组新增的合成配方",
+  "carpet.rule.rightClickHarvest.name": "右键收割",
+  "carpet.rule.rightClickHarvest.desc": "右键点击成熟作物可直接收割并自动补种，消耗一个种子"
 }
