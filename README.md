@@ -9,6 +9,10 @@
 | `rightClickHarvest` | 右键收割 | 关 | 右键成熟作物直接收割，并自动消耗一个种子补种 |
 | `boneMealCatalyst` | 骨粉催化 | 关 | 骨粉可催化甘蔗、仙人掌、地狱疣、藤蔓 |
 | `afkPlayerProtection` | 挂机保护 | 关 | 挂机玩家与假人免疫窒息、雷击、摔落、幻翼 |
+| `autoEatAfk` | 挂机自动进食 | 关 | 挂机时饱食度低于阈值自动进食 |
+| `autoEatAfkTarget` | 自动进食对象 | `all` | `fakePlayers` / `idlePlayers` / `all` |
+| `autoEatAfkThreshold` | 自动进食阈值 | 6 | 饱食度低于此值时进食（0-20） |
+| `autoEatAfkFoods` | 自动进食食物 | `*` | `*` 或逗号分隔的物品 ID 列表 |
 
 ---
 
@@ -107,4 +111,21 @@
 - `/kill` 等直接指令伤害不在拦截范围
 - 被保护时不会播放受伤动画、也不会被击退，相当于这次伤害没有发生
 
+## 挂机自动进食（`autoEatAfk`）
 
+开启后，挂机玩家与假人饱食度低于阈值时会自动从背包取食，走原版进食流程（营养、饱和度、药水效果、音效粒子、统计全部照常）：
+
+- **开启**：`/carpet autoEatAfk true`
+- **阈值**：`/carpet autoEatAfkThreshold 6`（0-20，默认 6，即 3 格饥饿值）
+- **对象**：`/carpet autoEatAfkTarget all`（`fakePlayers` 只喂假人 / `idlePlayers` 只喂真人 / `all` 两者都喂）
+- **食物**：`/carpet autoEatAfkFoods *`（`*` 任意食物；也可写 `minecraft:baked_potato,minecraft:bread`）
+
+行为细节：
+
+- 「挂机」判定与 `afkPlayerProtection` 共用：连续 60 秒无移动/转头/点击；假人始终视为挂机
+- 按背包顺序（快捷栏优先）取第一个符合条件且属于允许列表的食物，每次进食间隔至少 1 秒
+- 正在使用物品（吃东西、拉弓、举盾）时不打断
+- 创造模式饱食度不会下降，因此实际不会触发
+
+建议：默认 `*` 会把金苹果、附魔金苹果也算作可用食物；挂机场建议显式指定廉价食物，例如
+`/carpet autoEatAfkFoods minecraft:baked_potato,minecraft:bread,minecraft:cooked_beef`。

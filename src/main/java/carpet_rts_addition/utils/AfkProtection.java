@@ -65,7 +65,7 @@ public final class AfkProtection
         return CarpetRtsAdditionSettings.afkPlayerProtection && isAccidental(source) && isIdle(player);
     }
 
-    private static boolean isIdle(ServerPlayer player)
+    public static boolean isIdle(ServerPlayer player)
     {
         if (player instanceof EntityPlayerMPFake)
         {

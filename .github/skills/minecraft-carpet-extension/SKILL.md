@@ -128,11 +128,20 @@ public class MyValidator extends Validator<Integer>
     {
         return newValue < LIMIT ? newValue : null;   // 返回 null = 拒绝本次修改
     }
+
+    @Override
+    public String description() { return "Must be below " + LIMIT; }   // 拒绝时显示给玩家
 }
 ```
 
 - 可叠加：`validators = {Validators.NonNegativeNumber.class, MyValidator.class}`，按顺序全部通过才生效。
 - `carpet.settings.Validator` 是遗留类型，不要与新 API 混用（新 manager 只认 `carpet.api.settings.Validator`）。
+- 内置只有 `Validators.{NonNegativeNumber, Probablity, CommandLevel}`；**范围、枚举之类要自己写**。
+- 固定取值集合不要用校验器，直接 `@Rule(options = {"a", "b"})`：命令会自动补全，非法值报
+  `Valid options: [a, b]`。
+- 校验器在**命令执行时**运行，能拿到 `CommandSourceStack`；`description()` 会拼在
+  `Wrong value for <rule>: <typed>` 后面。
+- 校验器由 Carpet 反射 `new` 出来，必须是 **public 且有无参构造**（public static 嵌套类可以）。
 
 ## 6. 配方与其他数据驱动内容（26.x）
 
@@ -248,6 +257,7 @@ ItemStack result = ItemUtils.createFilledResult(stack, player, getEmptySuccessIt
 | `CarpetRtsAdditionServer` | `CarpetExtension` 单例：注册规则、挂服务器引用、转交命令与翻译 |
 | `settings/CarpetRtsAdditionSettings` | 规则声明（`carpet.api.settings.Rule`） |
 | `settings/CarpetRuleRegistrar` | 包装 `parseSettingsClass`，预留观察者等扩展点 |
+| `settings/AutoEatValidators` | `autoEatAfk` 的校验器：饱食度 0-20、食物列表为 `*` 或合法物品 ID |
 | `translations/RtsTranslations` | 读 `assets/carpet_rts_addition/lang/<lang>.json`，缺语言回退 `en_us` |
 | `commands/RegisterCommands` | 空占位，已接进 `registerCommands` 回调 |
 | `mixins/RecipeMapMixin` | `rtsRecipes` 关闭时过滤 `getRecipesFor` + `byKey` |
@@ -260,6 +270,7 @@ ItemStack result = ItemUtils.createFilledResult(stack, player, getEmptySuccessIt
 | `utils/RightClickHarvest` | 成熟 `CropBlock` 收割 + 补种（种子 = 该作物方块对应的 `BlockItem`） |
 | `utils/BoneMealCatalyst` | 骨粉催熟甘蔗/仙人掌/地狱疣/藤蔓（原版 `growCrop` 拒绝的方块） |
 | `utils/AfkProtection` | 挂机判定（60 秒无移动/转头/点击）+ 四类意外伤害过滤 |
+| `utils/AutoEatAfk` | 挂机时按阈值找背包食物，走 `ItemStack#finishUsingItem` 完成原版进食 |
 
 ### 11.3 已实现的规则
 
@@ -270,6 +281,7 @@ ItemStack result = ItemUtils.createFilledResult(stack, player, getEmptySuccessIt
 | `rightClickHarvest` | `/carpet rightClickHarvest true` | 右键成熟作物收割并补种；潜行时不触发 |
 | `boneMealCatalyst` | `/carpet boneMealCatalyst true` | 骨粉催熟甘蔗/仙人掌/地狱疣/藤蔓，每次消耗一个 |
 | `afkPlayerProtection` | `/carpet afkPlayerProtection true` | 挂机玩家与假人免疫窒息/雷击/摔落/幻翼；60 秒无操作判定挂机 |
+| `autoEatAfk` + 3 个配置项 | `/carpet autoEatAfk true` | 挂机自动进食：`autoEatAfkTarget`（fakePlayers/idlePlayers/all）、`autoEatAfkThreshold`（0-20）、`autoEatAfkFoods`（`*` 或 ID 列表） |
 
 两条都注册进 `CarpetServer.settingsManager` → **翻译键前缀是 `carpet.`**，
 而语言文件路径是 `assets/carpet_rts_addition/lang/`（两者不同，见 [docs/dev-log/2026-10-23-carpet-rule-translation-keys.md](../../../docs/dev-log/2026-10-23-carpet-rule-translation-keys.md)）。
@@ -325,5 +337,11 @@ ItemStack result = ItemUtils.createFilledResult(stack, player, getEmptySuccessIt
 伤害类规则用 `/damage <目标> <数值> <伤害类型> [by <实体>]` 验证：被拦截时输出
 `Target is invulnerable to the given damage type`，正常生效时输出 `Applied X damage`；
 `by <实体>` 可区分"幻翼攻击"与"普通生物攻击"。想看真实摔落，直接 `tp` 到高处即可。
+
+饥饿/饱食度相关规则：**玩家的 `foodLevel` 不能 `data merge`**，只能靠
+`/effect give <名称> minecraft:hunger <秒> <放大倍率>` 掉血条——放大倍率要拉到 250，
+否则饱和度和 4 点/格的消耗速率会让 20 点饥饿值掉得极慢（`hunger 10 5` 十秒只掉 1 点）。
+吃掉一到两块面包后饱和度回满，下次必须更高倍率才能再次压低。
+`/execute as <名称> run clear @s <物品> 0` 只统计不删除，适合做"还剩几个"的断言。
 
 

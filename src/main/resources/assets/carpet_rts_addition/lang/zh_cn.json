@@ -9,5 +9,13 @@
   "carpet.rule.boneMealCatalyst.name": "骨粉催化",
   "carpet.rule.boneMealCatalyst.desc": "骨粉可催化甘蔗、仙人掌、地狱疣与藤蔓，每次消耗一个骨粉",
   "carpet.rule.afkPlayerProtection.name": "挂机保护",
-  "carpet.rule.afkPlayerProtection.desc": "挂机玩家与假人免疫窒息、雷击、摔落与幻翼攻击"
+  "carpet.rule.afkPlayerProtection.desc": "挂机玩家与假人免疫窒息、雷击、摔落与幻翼攻击",
+  "carpet.rule.autoEatAfk.name": "挂机自动进食",
+  "carpet.rule.autoEatAfk.desc": "挂机玩家与假人饱食度低于阈值时自动进食背包中的食物",
+  "carpet.rule.autoEatAfkTarget.name": "自动进食对象",
+  "carpet.rule.autoEatAfkTarget.desc": "喂食对象：fakePlayers（假人）、idlePlayers（仅真人）或 all",
+  "carpet.rule.autoEatAfkThreshold.name": "自动进食阈值",
+  "carpet.rule.autoEatAfkThreshold.desc": "触发自动进食的饱食度（0-20）",
+  "carpet.rule.autoEatAfkFoods.name": "自动进食食物",
+  "carpet.rule.autoEatAfkFoods.desc": "允许的食物：* 表示任意食物，或逗号分隔的物品 ID 列表"
 }
