@@ -254,8 +254,10 @@ ItemStack result = ItemUtils.createFilledResult(stack, player, getEmptySuccessIt
 | `mixins/EnchantmentMixin` | `canEnchant` HEAD：放行给桶附无限 |
 | `mixins/BucketItemMixin` | `getEmptySuccessItem` HEAD：返回 `copy()` 保住桶 |
 | `mixins/CropHarvestMixin` | `BlockBehaviour#useItemOn` / `#useWithoutItem` HEAD：交给 `rightClickHarvest` 判定 |
+| `mixins/BoneMealItemMixin` | `BoneMealItem#useOn` HEAD：交给 `boneMealCatalyst` 判定 |
 | `utils/InfinityEnchantment` | 每次现取 registry 的 Infinity Holder（`/reload` 重建后仍正确） |
 | `utils/RightClickHarvest` | 成熟 `CropBlock` 收割 + 补种（种子 = 该作物方块对应的 `BlockItem`） |
+| `utils/BoneMealCatalyst` | 骨粉催熟甘蔗/仙人掌/地狱疣/藤蔓（原版 `growCrop` 拒绝的方块） |
 
 ### 11.3 已实现的规则
 
@@ -264,6 +266,7 @@ ItemStack result = ItemUtils.createFilledResult(stack, player, getEmptySuccessIt
 | `rtsRecipes` | `/carpet rtsRecipes true` | 41 个配方在 `data/carpet_rts_addition/recipe/`，关闭时查询层过滤 |
 | `infiniteBuckets` | `/carpet infiniteBuckets true` | 桶可附无限，使用后不被消耗 |
 | `rightClickHarvest` | `/carpet rightClickHarvest true` | 右键成熟作物收割并补种；潜行时不触发 |
+| `boneMealCatalyst` | `/carpet boneMealCatalyst true` | 骨粉催熟甘蔗/仙人掌/地狱疣/藤蔓，每次消耗一个 |
 
 两条都注册进 `CarpetServer.settingsManager` → **翻译键前缀是 `carpet.`**，
 而语言文件路径是 `assets/carpet_rts_addition/lang/`（两者不同，见 [docs/dev-log/2026-10-23-carpet-rule-translation-keys.md](../../../docs/dev-log/2026-10-23-carpet-rule-translation-keys.md)）。
@@ -283,7 +286,6 @@ ItemStack result = ItemUtils.createFilledResult(stack, player, getEmptySuccessIt
 | [ARCHITECTURE.md](../../../ARCHITECTURE.md) | **§0/§1/§2/§4 已过期**（仍写「6 个 Java 文件」「没有规则」「没有 Mixin」「43 个配方」），事实以本节为准 |
 | [docs/dev-log/2026-10-23-report.md](../../../docs/dev-log/2026-10-23-report.md) | 一次大改造的日报：决策依据、踩坑、实测矩阵 |
 | [docs/dev-log/2026-10-23-carpet-rule-translation-keys.md](../../../docs/dev-log/2026-10-23-carpet-rule-translation-keys.md) | 翻译键复盘（规则名/描述/类别三种键） |
-| [SESSION_LOG.md](../../../SESSION_LOG.md) | 2026-10-22 的历史记录；顶部已加「已过期」提示，正文内容按当时状态读 |
 
 ### 11.6 已知限制
 
@@ -292,6 +294,7 @@ ItemStack result = ItemUtils.createFilledResult(stack, player, getEmptySuccessIt
 | 配方书残留 | 规则关闭时配方书仍显示条目（display 在 `finalizeRecipeLoading` 一次性构建），点击无效 |
 | 发射器路径 | 带无限的桶经发射器射出仍会被消耗 |
 | 右键收割覆盖面 | 只处理 `CropBlock`（小麦/胡萝卜/马铃薯/甜菜根）；下界疣、可可豆不支持 |
+| 骨粉催化覆盖面 | 只处理甘蔗/仙人掌/地狱疣/藤蔓；竹子、海带等本身已可催熟的植物走原版逻辑 |
 | `en_us` 无规则名 | 英文下显示裸 ID，与 Carpet 自带规则一致 |
 | 无单元测试 | 验证靠 `gradlew build` + 开发服 RCON（`/datapack list`、`/recipe give`、`/enchant`、生存模式放水） |
 
@@ -305,6 +308,7 @@ ItemStack result = ItemUtils.createFilledResult(stack, player, getEmptySuccessIt
 | `pause-when-empty-seconds=60` | 服务器在无真人 60 秒后暂停，`/player` 假玩家的 `use`/`jump`/`attack` **全部无效**，但 `/tick query` 显示正常 | 设为 `0` 或先让真人登录 |
 | `spawn-protection=16` | 出生点 16 格内 `mayInteract` 为 false，假玩家右键**完全没反应**（连门都开不了） | 测试场地放到 200 格外 |
 | 作物下方不是 farmland | 作物被 `updateShape` 移除，`setblock` 放回去也立刻消失，于是"右键没反应" | 每次测试前重设 `farmland[moisture=7]` |
+| 目标方块碰撞箱很薄（藤蔓、地毯） | 瞄准方块中心时射线从空气穿过，右键完全没反应 | `look at` 直接给薄面的坐标（西面藤蔓瞄准 `x+0.03`） |
 
 假玩家右击配方：`/player <名称> spawn at <x> <y> <z> facing <yaw> <pitch>` →
 `/player <名称> look at <x> <y> <z>` → `/player <名称> use`。

@@ -27,4 +27,7 @@ public final class CarpetRtsAdditionSettings
 
     @Rule(categories = "carpet-rts-addition")
     public static boolean rightClickHarvest = false;
+
+    @Rule(categories = "carpet-rts-addition")
+    public static boolean boneMealCatalyst = false;
 }

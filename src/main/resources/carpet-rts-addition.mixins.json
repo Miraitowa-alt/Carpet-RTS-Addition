@@ -4,6 +4,7 @@
   "package": "carpet_rts_addition.mixins",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
+    "BoneMealItemMixin",
     "BucketItemMixin",
     "CropHarvestMixin",
     "EnchantmentMixin",
